@@ -11,37 +11,47 @@ import net.kyori.adventure.text.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public class MessageCommand implements SimpleCommand {
+public class ReplyCommand implements SimpleCommand {
 
     private final ProxyServer server;
 
 
-    public MessageCommand(ProxyServer server) {
+    public ReplyCommand(ProxyServer server) {
         this.server = server;
     }
 
     @Override
     public void execute(final Invocation invocation) {
         CommandSource source = invocation.source();
-        String senderName = (source instanceof Player) ? ((Player) source).getUsername() : "Console";
-        ArrayList<String> args = new ArrayList<>(List.of(invocation.arguments()));
 
-        if (args.size() < 2) {
-            source.sendMessage(Component.text("§cUsage: /msg <player> <message>"));
+        if (!(source instanceof Player)) {
+            source.sendMessage(Component.text("§cThis command can only be run in-game."));
             return;
         }
 
-        String targetPlayerName = args.get(0);
+        String senderName = ((Player) source).getUsername();
+        ArrayList<String> args = new ArrayList<>(List.of(invocation.arguments()));
+
+        if (args.isEmpty()) {
+            source.sendMessage(Component.text("§cUsage: /reply <message>"));
+            return;
+        }
+
+        if (!(MainVelocity.lastMessaged.containsKey(((Player) source).getUniqueId()))) {
+            source.sendMessage(Component.text("§cYou haven't messaged anyone recently."));
+
+            return;
+        }
+
+        UUID targetPlayerUUID = MainVelocity.lastMessaged.get(((Player) source).getUniqueId());
+        String targetPlayerName = server.getPlayer(targetPlayerUUID).get().getUsername();
+
         ArrayList<String> messageArgs = new ArrayList<>(args);
-        messageArgs.remove(0);
         String message = String.join(" ", messageArgs);
 
-        Boolean sentMessage = MessageUtil.messageTarget(server, targetPlayerName, source, senderName, message);
-
-        if (source instanceof Player && sentMessage) {
-            MainVelocity.lastMessaged.put(((Player) source).getUniqueId(), server.getPlayer(targetPlayerName).get().getUniqueId());
-        }
+        MessageUtil.messageTarget(server, targetPlayerName, source, senderName, message);
     }
 
     public boolean hasPermission(final Invocation invocation, String permission) {

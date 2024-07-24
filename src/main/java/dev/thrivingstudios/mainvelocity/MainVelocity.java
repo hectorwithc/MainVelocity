@@ -8,9 +8,13 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.thrivingstudios.mainvelocity.commands.MessageCommand;
+import dev.thrivingstudios.mainvelocity.commands.ReplyCommand;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
 
 @Plugin(
         id = "mainvelocity",
@@ -23,6 +27,8 @@ public class MainVelocity {
     private final ProxyServer server;
     private final Logger logger;
 
+    public static HashMap<UUID, UUID> lastMessaged = new HashMap<UUID, UUID>();
+
     @Inject
     public MainVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
         this.server = server;
@@ -32,5 +38,6 @@ public class MainVelocity {
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         server.getCommandManager().register("msg", new MessageCommand(server), "message", "tell", "whisper");
+        server.getCommandManager().register("reply", new ReplyCommand(server), "r");
     }
 }
