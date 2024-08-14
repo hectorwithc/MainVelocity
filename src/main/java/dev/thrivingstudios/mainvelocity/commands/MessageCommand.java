@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class MessageCommand implements SimpleCommand {
 
@@ -46,5 +47,20 @@ public class MessageCommand implements SimpleCommand {
 
     public boolean hasPermission(final Invocation invocation, String permission) {
         return invocation.source().hasPermission(permission);
+    }
+
+    @Override
+    public CompletableFuture<List<String>> suggestAsync(final Invocation invocation) {
+        if (invocation.arguments().length == 0) {
+            return CompletableFuture.supplyAsync(() -> {
+                List<String> suggestions = new ArrayList<>();
+                for (Player player : server.getAllPlayers()) {
+                    suggestions.add(player.getUsername());
+                }
+                return suggestions;
+            });
+        } else {
+            return CompletableFuture.completedFuture(List.of());
+        }
     }
 }
